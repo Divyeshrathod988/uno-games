@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNO Game</title>
+    <link rel="stylesheet" href="/css/game.css">
+</head>
+<body>
+<h1>UNO -Play Anonymously</h1>
+    <div id="playerContainer"></div>
+
+    <!-- Player info form -->
+    <div id="playerInfo" style="display: none;">
+        <input type="text" id="playerName" placeholder="Enter your name">
+        <select id="playerGender">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select>
+        <button id="submitPlayerInfo">Submit</button>
+        <h3>Powered by Taha Ramakda</h3>
+    </div>
+
+    <div id="backDeckContainer">
+        <button id="back-deck"></button>
+    </div>
+    <div id="drawnCard"></div>
+
+    <div id="topCenterCard">
+        <img src="" alt="Clicked Card">
+    </div>
+
+    <button id="endTurnButton" style="display: none;">End Turn</button>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+    
+        function showCardInTopCenter(card) {
+            const topCenterCard = document.getElementById('topCenterCard');
+            const img = topCenterCard.querySelector('img');
+            img.src = card.imageUrl;
+            img.alt = 'Selected Card';
+            topCenterCard.style.display = 'block';
+        }
+    
+        document.getElementById('back-deck').addEventListener('click', () => {
+            socket.emit('drawCard');
+        });
+    
+        socket.on('newCard', (card) => {
+            const drawnCardContainer = document.getElementById('drawnCard');
+            const temp = document.createElement('div');
+            const button = document.createElement('button');
+            const img = document.createElement('img');
+            img.src = card.imageUrl;
+            img.alt = 'Drawn Card';
+            button.appendChild(img);
+            button.classList.add('drawnCard');
+            temp.appendChild(button);
+            drawnCardContainer.appendChild(temp);
+    
+            button.addEventListener('click', () => {
+                showCardInTopCenter(card);
+                socket.emit('cardClicked', card); 
+                temp.remove();
+            });
+        });
+    
+        socket.on('cardClicked', (card) => {
+            showCardInTopCenter(card);
+        });
+    
+        socket.on('playerData', (data) => {
+            clearPlayerCards();
+            data.players.forEach(player => {
+                createPlayerCard(player.name, player.cardCount);
+            });
+        });
+    
+        function createPlayerCard(playerName, cardCount) {
+            const playerContainer = document.getElementById('playerContainer');
+            const newPlayerCard = document.createElement('div');
+            newPlayerCard.classList.add('player-card');
+            newPlayerCard.innerHTML = `
+                <span class="player-name">${playerName}</span>
+                <span class="player-cards">${cardCount} <span class="cards-text">cards</span></span>
+            `;
+            playerContainer.appendChild(newPlayerCard);
+        }
+    
+        function updatePlayerCardCount(playerName, newCount) {
+            const playerCards = document.querySelectorAll('.player-card');
+            playerCards.forEach(playerCard => {
+                const nameElement = playerCard.querySelector('.player-name');
+                if (nameElement.textContent === playerName) {
+                    const countElement = playerCard.querySelector('.player-cards');
+                    countElement.innerHTML = `${newCount} <span class="cards-text">cards</span>`;
+                }
+            });
+        }
+    
+        function clearPlayerCards() {
+            const playerContainer = document.getElementById('playerContainer');
+            playerContainer.innerHTML = '';
+        }
+    
+        // Submit player info
+        document.getElementById('submitPlayerInfo').addEventListener('click', () => {
+            const playerName = document.getElementById('playerName').value;
+            const playerGender = document.getElementById('playerGender').value;
+            if (playerName.trim() !== '') {
+                socket.emit('registerPlayer', { name: playerName, gender: playerGender });
+                localStorage.setItem('playerName', playerName);
+                localStorage.setItem('playerGender', playerGender);
+                document.getElementById('playerInfo').style.display = 'none';
+            } else {
+                alert('Please enter your name.');
+            }
+        });
+    
+        const playerName = localStorage.getItem('playerName');
+        const playerGender = localStorage.getItem('playerGender');
+    
+        if (!playerName || !playerGender) {
+            document.getElementById('playerInfo').style.display = 'block';
+        } else {
+            socket.emit('registerPlayer', { name: playerName, gender: playerGender });
+        }
+    
+        socket.emit('getPlayerData');
+
+        socket.on('currentPlayer', (playerId) => {
+            updateCurrentPlayerUI(playerId);
+            const endTurnButton = document.getElementById('endTurnButton');
+            if (socket.id === playerId) {
+                endTurnButton.style.display = 'block';
+            } else {
+                endTurnButton.style.display = 'none';
+            }
+        });
+
+        function updateCurrentPlayerUI(currentPlayerId) {
+            const playerCards = document.querySelectorAll('.player-card');
+            playerCards.forEach(playerCard => {
+                playerCard.classList.remove('current-player');
+                const nameElement = playerCard.querySelector('.player-name');
+                if (nameElement.dataset.id === currentPlayerId) {
+                    playerCard.classList.add('current-player');
+                }
+            });
+        }
+
+        document.getElementById('endTurnButton').addEventListener('click', () => {
+            socket.emit('endTurn');
+        });
+    </script>
+    
+</body>
+</html>
