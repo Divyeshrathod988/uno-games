@@ -2,6 +2,9 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('90ea501a-d207-4767-a4d9-bd26013c6971')
+        SSH_CREDENTIALS = 'ec2-ssh-key'
+        EC2_INSTANCE = 'ubuntu@ec2-13-49-134-219'
+        DOCKER_IMAGE = 'TahaRamakda/UNO:latest'
     }
     stages {
         stage('Checkout') {
