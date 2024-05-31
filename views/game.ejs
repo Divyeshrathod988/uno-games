@@ -10,7 +10,6 @@
 <h1>UNO -Play Anonymously</h1>
     <div id="playerContainer"></div>
 
-    <!-- Player info form -->
     <div id="playerInfo" style="display: none;">
         <input type="text" id="playerName" placeholder="Enter your name">
         <select id="playerGender">
@@ -104,7 +103,6 @@
             playerContainer.innerHTML = '';
         }
     
-        // Submit player info
         document.getElementById('submitPlayerInfo').addEventListener('click', () => {
             const playerName = document.getElementById('playerName').value;
             const playerGender = document.getElementById('playerGender').value;
