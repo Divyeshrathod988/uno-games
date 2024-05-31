@@ -179,7 +179,6 @@ function drawCards(num) {
     return drawnCards;
 }
 io.on('connection', (socket) => {
-    // Player draws a card
     socket.on('drawCard', () => {
         const newCard = drawCards(1)[0];
         playerCards[socket.id].push(newCard);
