@@ -4,7 +4,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('90ea501a-d207-4767-a4d9-bd26013c6971')
         SSH_CREDENTIALS = 'ec2-ssh-key'
         EC2_INSTANCE = 'ubuntu@ec2-13-49-134-219'
-        DOCKER_IMAGE = 'TahaRamakda/UNO:latest'
+        DOCKER_IMAGE = '/UNO:latest'
     }
     stages {
         stage('Checkout') {
@@ -24,14 +24,14 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t TahaRamakda/UNO .'
+                sh 'docker build -t /UNO .'
             }
         }
         stage('Push Docker Image') {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', '90ea501a-d207-4767-a4d9-bd26013c6971') {
-                        sh 'docker push TahaRamakda/UNO:latest'
+                        sh 'docker push /UNO:latest'
                     }
                 }
             }
@@ -40,10 +40,10 @@ pipeline {
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-49-134-219.eu-north-1.compute.amazonaws.com 'docker pull TahaRamakda/UNO:latest'
+                    ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-49-134-219.eu-north-1.compute.amazonaws.com 'docker pull /UNO:latest'
                     ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-49-134-219.eu-north-1.compute.amazonaws.com 'docker stop UNO || true'
                     ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-49-134-219.eu-north-1.compute.amazonaws.com 'docker rm UNO || true'
-                    ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-49-134-219.eu-north-1.compute.amazonaws.com 'docker run -d -p 9000:9000 --name UNO TahaRamakda:latest'
+                    ssh -o StrictHostKeyChecking=no ubuntu@ec2-13-49-134-219.eu-north-1.compute.amazonaws.com 'docker run -d -p 9000:9000 --name UNO :latest'
                     '''
                 }
             }
